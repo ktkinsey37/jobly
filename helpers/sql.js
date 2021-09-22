@@ -31,4 +31,37 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-module.exports = { sqlForPartialUpdate };
+function sqlForFilterGet(dataToFilterBy) {
+  
+  // Makes an array of keys from the keys in the data to update
+  let sqlQuery = []
+
+  let i = 1
+  for (let key in dataToFilterBy){
+    if (dataToFilterBy.hasOwnProperty(key)){
+      if (key == "name") {
+        sqlQuery.push(`name LIKE $${i}`)
+        i++
+        dataToFilterBy[key] = "%" + dataToFilterBy[key] + "%"
+      } else if (key == "maxEmployees") {
+        sqlQuery.push(`num_employees < $${i}`)
+        i++
+      } else if (key == "minEmployees") {
+        sqlQuery.push(`num_employees > $${i}`)
+        i++
+      }
+      console.log(key + dataToFilterBy[key])
+    }
+  }
+  i = 1
+
+  sqlQuery = sqlQuery.join(" AND ")
+
+  const values = Object.values(dataToFilterBy)
+  
+ console.log(sqlQuery, values, "FINISHED SQLQUERY")
+ return { "sqlQuery":sqlQuery, "values":values }
+
+}
+
+module.exports = { sqlForPartialUpdate, sqlForFilterGet };

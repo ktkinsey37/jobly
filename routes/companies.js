@@ -5,7 +5,7 @@
 const jsonschema = require("jsonschema");
 const express = require("express");
 
-const { BadRequestError } = require("../expressError");
+const { BadRequestError, ExpressError } = require("../expressError");
 const { ensureLoggedIn } = require("../middleware/auth");
 const Company = require("../models/company");
 
@@ -50,10 +50,39 @@ router.post("/", ensureLoggedIn, async function (req, res, next) {
  * Authorization required: none
  */
 
+// router.get("/", async function (req, res, next) {
+//   try {
+//     const companies = await Company.findAll();
+//     return res.json({ companies });
+//   } catch (err) {
+//     return next(err);
+//   }
+// });
+
 router.get("/", async function (req, res, next) {
   try {
-    const companies = await Company.findAll();
-    return res.json({ companies });
+    // This filters out requests with no filters. Returns all companies.
+    if (Object.keys(req.body).length === 0 && req.body.constructor === Object){
+      const companies = await Company.findAll();
+      return res.json({ companies });
+    }
+
+    // Filters out requests with min employees greater than max employees
+    else if (req.body.minEmployees > req.body.maxEmployees) {
+      throw new ExpressError("minEmployees cannot exceed maxEmployees", 400)
+    }
+
+    // Passes data from req.body to Company.filterGet
+    else {
+      const data = req.body
+      const response = Company.filterGet(data)
+
+      return res.json({ data });
+      // data is the object with key/value pairs for the search, already gets rid of ones that arent there
+    }
+
+    // const companies = await Company.findAll();
+    // return res.json({ data });
   } catch (err) {
     return next(err);
   }

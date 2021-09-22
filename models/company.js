@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForFilterGet } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -139,6 +139,17 @@ class Company {
     const company = result.rows[0];
 
     if (!company) throw new NotFoundError(`No company: ${handle}`);
+  }
+
+  // Accepts an object of {filterparams:filters} passed into the get route
+  static async filterGet(data) {
+
+    const { sqlQuery, values } = sqlForFilterGet(data)
+    console.log(sqlQuery, "AND THIS", values, "THIS IS IN THE COMPANY MODEL")
+
+    const result = await db.query(`SELECT * FROM companies WHERE ${sqlQuery}`, [ ...values])
+    // const result = await db.query(`SELECT * FROM companies WHERE ${sqlQuery}`, [...values])
+    console.log(result.rows)
   }
 }
 
