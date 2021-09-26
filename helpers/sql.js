@@ -1,4 +1,4 @@
-const { BadRequestError } = require("../expressError");
+const { BadRequestError, ExpressError } = require("../expressError");
 
 // This function takes in a partial amount of data in an object form for js
 // and returns it so that it's compatible with the current SQL database
@@ -31,37 +31,98 @@ function sqlForPartialUpdate(dataToUpdate, jsToSql) {
   };
 }
 
-function sqlForFilterGet(dataToFilterBy) {
+function sqlForFilterGetCompanies(dataToFilterBy) {
   
-  // Makes an array of keys from the keys in the data to update
+  // Inits final SQL query array
   let sqlQuery = []
 
+  // Sets increment to run through data object
   let i = 1
+
+  // Iterates through the data object, with specific responses per possible keys
+  // (this also serves to filter out any req.body possibilities)
   for (let key in dataToFilterBy){
     if (dataToFilterBy.hasOwnProperty(key)){
+
+      // If the key is name, write a SQL query LIKE search (toLowerCases the name), push into sqlQuery array
       if (key == "name") {
-        sqlQuery.push(`name LIKE $${i}`)
+        sqlQuery.push(`LOWER( name ) LIKE $${i}`)
         i++
         dataToFilterBy[key] = "%" + dataToFilterBy[key] + "%"
+
+        // If the key is maxEmployees, write SQL query for that, push into sqlQuery array
       } else if (key == "maxEmployees") {
         sqlQuery.push(`num_employees < $${i}`)
         i++
+
+        // If the key is minEmployees, write SQL query for that, push into sqlQuery array
       } else if (key == "minEmployees") {
         sqlQuery.push(`num_employees > $${i}`)
         i++
+      } else {
+        throw new ExpressError("Incorrect filter data provided", 400)
       }
-      console.log(key + dataToFilterBy[key])
     }
   }
   i = 1
 
+  // Joins all the SQL queries that are in sqlQuery array into a final statement
   sqlQuery = sqlQuery.join(" AND ")
 
-  const values = Object.values(dataToFilterBy)
+  // Gets the values to be searched for from the data, filters them to lower case (for the name)
+  let values = Object.values(dataToFilterBy)
+  values = values.map((x) => x.toString().toLowerCase())
   
- console.log(sqlQuery, values, "FINISHED SQLQUERY")
+// Returns the SQL query and the values
  return { "sqlQuery":sqlQuery, "values":values }
 
 }
 
-module.exports = { sqlForPartialUpdate, sqlForFilterGet };
+function sqlForFilterGetJobs(dataToFilterBy) {
+  
+  // Inits final SQL query array
+  let sqlQuery = []
+
+  // Sets increment to run through data object
+  let i = 1
+
+  // Iterates through the data object, with specific responses per possible keys
+  // (this also serves to filter out any req.body possibilities)
+  for (let key in dataToFilterBy){
+    if (dataToFilterBy.hasOwnProperty(key)){
+
+      // If the key is name, write a SQL query LIKE search (toLowerCases the name), push into sqlQuery array
+      if (key == "title") {
+        sqlQuery.push(`LOWER( title ) LIKE $${i}`)
+        i++
+        dataToFilterBy[key] = "%" + dataToFilterBy[key] + "%"
+
+        // If the key is maxEmployees, write SQL query for that, push into sqlQuery array
+      } else if (key == "maxEmployees") {
+        sqlQuery.push(`num_employees < $${i}`)
+        i++
+
+        // If the key is minEmployees, write SQL query for that, push into sqlQuery array
+      } else if (key == "minEmployees") {
+        sqlQuery.push(`num_employees > $${i}`)
+        i++
+      } else {
+        throw new ExpressError("Incorrect filter data provided", 400)
+      }
+    }
+  }
+  i = 1
+
+  // Joins all the SQL queries that are in sqlQuery array into a final statement
+  sqlQuery = sqlQuery.join(" AND ")
+
+  // Gets the values to be searched for from the data, filters them to lower case (for the name)
+  let values = Object.values(dataToFilterBy)
+  values = values.map((x) => x.toLowerCase())
+  
+// Returns the SQL query and the values
+ return { "sqlQuery":sqlQuery, "values":values }
+
+}
+
+module.exports = { sqlForPartialUpdate, sqlForFilterGetCompanies };

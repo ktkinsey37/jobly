@@ -1,24 +1,25 @@
 "use strict";
 
-/** Routes for companies. */
+/** Routes for jobs. */
 
 const jsonschema = require("jsonschema");
 const express = require("express");
 
 const { BadRequestError, ExpressError } = require("../expressError");
 const { ensureLoggedIn, ensureIsAdmin } = require("../middleware/auth");
-const Company = require("../models/company");
+const Job = require("../models/job");
 
-const companyNewSchema = require("../schemas/companyNew.json");
-const companyUpdateSchema = require("../schemas/companyUpdate.json");
-const companyGetSchema = require("../schemas/companyGet.json");
+const jobNewSchema = require("../schemas/jobNew.json");
+const jobUpdateSchema = require("../schemas/jobUpdate.json");
+
+// NEED TO MAKE NEW SCHEMAS
 
 const router = new express.Router();
 
 
-/** POST / { company } =>  { company }
+/** POST / { job } =>  { job }
  *
- * company should be { handle, name, description, numEmployees, logoUrl }
+ * job should be { handle, name, description, numEmployees, logoUrl }
  *
  * Returns { handle, name, description, numEmployees, logoUrl }
  *
@@ -27,14 +28,14 @@ const router = new express.Router();
 
 router.post("/", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next) {
   try {
-    const validator = jsonschema.validate(req.body, companyNewSchema);
+    const validator = jsonschema.validate(req.body, jobNewSchema);
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
 
-    const company = await Company.create(req.body);
-    return res.status(201).json({ company });
+    const job = await job.create(req.body);
+    return res.status(201).json({ job });
   } catch (err) {
     return next(err);
   }
@@ -53,17 +54,9 @@ router.post("/", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next
 
 router.get("/", async function (req, res, next) {
   try {
-
-    // Validates incoming json
-    const validator = jsonschema.validate(req.body, companyGetSchema);
-    if (!validator.valid) {
-      const errs = validator.errors.map(e => e.stack);
-      throw new BadRequestError(errs);
-    }
-
-    // For requests with no params, return all companies.
+    // Filters out requests with no filters. Returns all companies.
     if (Object.keys(req.body).length === 0 && req.body.constructor === Object){
-      const companies = await Company.findAll();
+      const companies = await job.findAll();
       return res.json({ companies });
     }
 
@@ -72,22 +65,22 @@ router.get("/", async function (req, res, next) {
       throw new ExpressError("minEmployees cannot exceed maxEmployees", 400)
     }
 
-    // Passes data from req.body to Company.filterGet, to create a response
+    // Passes data from req.body to job.filterGet, to create a response
     else {
       const data = req.body
-      const companies = await Company.filterGet(data)
+      const response = await job.filterGet(data)
 
       // Returns the response
-      return res.json({ companies });
+      return res.json({ response });
     }
   } catch (err) {
     return next(err);
   }
 });
 
-/** GET /[handle]  =>  { company }
+/** GET /[handle]  =>  { job }
  *
- *  Company is { handle, name, description, numEmployees, logoUrl, jobs }
+ *  job is { handle, name, description, numEmployees, logoUrl, jobs }
  *   where jobs is [{ id, title, salary, equity }, ...]
  *
  * Authorization required: none
@@ -95,16 +88,16 @@ router.get("/", async function (req, res, next) {
 
 router.get("/:handle", async function (req, res, next) {
   try {
-    const company = await Company.get(req.params.handle);
-    return res.json({ company });
+    const job = await job.get(req.params.handle);
+    return res.json({ job });
   } catch (err) {
     return next(err);
   }
 });
 
-/** PATCH /[handle] { fld1, fld2, ... } => { company }
+/** PATCH /[handle] { fld1, fld2, ... } => { job }
  *
- * Patches company data.
+ * Patches job data.
  *
  * fields can be: { name, description, numEmployees, logo_url }
  *
@@ -115,14 +108,14 @@ router.get("/:handle", async function (req, res, next) {
 
 router.patch("/:handle", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next) {
   try {
-    const validator = jsonschema.validate(req.body, companyUpdateSchema);
+    const validator = jsonschema.validate(req.body, jobUpdateSchema);
     if (!validator.valid) {
       const errs = validator.errors.map(e => e.stack);
       throw new BadRequestError(errs);
     }
 
-    const company = await Company.update(req.params.handle, req.body);
-    return res.json({ company });
+    const job = await job.update(req.params.handle, req.body);
+    return res.json({ job });
   } catch (err) {
     return next(err);
   }
@@ -135,7 +128,7 @@ router.patch("/:handle", [ensureLoggedIn, ensureIsAdmin], async function (req, r
 
 router.delete("/:handle", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next) {
   try {
-    await Company.remove(req.params.handle);
+    await job.remove(req.params.handle);
     return res.json({ deleted: req.params.handle });
   } catch (err) {
     return next(err);
