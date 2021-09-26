@@ -2,7 +2,7 @@
 
 const db = require("../db");
 const { BadRequestError, NotFoundError } = require("../expressError");
-const { sqlForPartialUpdate, sqlForFilterGet } = require("../helpers/sql");
+const { sqlForPartialUpdate, sqlForFilterGetJobs } = require("../helpers/sql");
 
 /** Related functions for companies. */
 
@@ -16,14 +16,14 @@ class Job {
    * Throws BadRequestError if job already in database.
    * */
 
-  static async create({ title, salary, equity, jobHandle }) {
+  static async create({ title, salary, equity, companyHandle }) {
 
     const result = await db.query(
           `INSERT INTO jobs
-           (title, salary, equity, job_handle)
+           (title, salary, equity, company_handle)
            VALUES ($1, $2, $3, $4)
-           RETURNING id, title, salary, equity, job_handle AS "jobHandle"`,
-        [title, salary, equity, jobHandle],
+           RETURNING id, title, salary, equity, company_handle AS "companyHandle"`,
+        [title, salary, equity, companyHandle],
     );
     const job = result.rows[0];
 
@@ -37,10 +37,8 @@ class Job {
 
   static async findAll() {
     const jobsRes = await db.query(
-          `SELECT id, title, salary, equity, job_handle AS "jobHandle"
-           FROM jobs
-           GROUP BY title
-           ORDER BY title`);
+          `SELECT id, title, salary, equity, company_handle AS "companyHandle"
+           FROM jobs`);
     return jobsRes.rows;
   }
 
@@ -58,8 +56,8 @@ class Job {
                   title,
                   salary,
                   equity,
-                  job_handle AS "jobHandle",
-           FROM job
+                  company_handle AS "companyHandle"
+           FROM jobs
            WHERE id = $1`,
         [id]);
 
@@ -93,7 +91,7 @@ class Job {
     const querySql = `UPDATE jobs 
                       SET ${setCols} 
                       WHERE id = ${handleVarIdx} 
-                      RETURNING id, title, salary, equity, job_handle AS "jobHandle"`;
+                      RETURNING id, title, salary, equity, company_handle AS "companyHandle"`;
     const result = await db.query(querySql, [...values, id]);
     const job = result.rows[0];
 
@@ -110,7 +108,7 @@ class Job {
   static async remove(id) {
     const result = await db.query(
           `DELETE
-           FROM job
+           FROM jobs
            WHERE id = $1
            RETURNING id`,
         [id]);
@@ -123,10 +121,10 @@ class Job {
   static async filterGet(data) {
 
     // Uses helper function to produce a customized SQL query and list of values
-    const { sqlQuery, values } = sqlForFilterGet(data)
+    const { sqlQuery, values } = sqlForFilterGetJobs(data)
 
     // Uses the query and values to get a filtered search result from db
-    const result = await db.query(`SELECT * FROM companies WHERE ${sqlQuery}`, [ ...values])
+    const result = await db.query(`SELECT * FROM jobs WHERE ${sqlQuery}`, [ ...values])
 
     return result.rows
   }

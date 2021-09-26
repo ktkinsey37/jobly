@@ -34,7 +34,7 @@ router.post("/", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next
       throw new BadRequestError(errs);
     }
 
-    const job = await job.create(req.body);
+    const job = await Job.create(req.body);
     return res.status(201).json({ job });
   } catch (err) {
     return next(err);
@@ -53,22 +53,19 @@ router.post("/", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next
  */
 
 router.get("/", async function (req, res, next) {
+// NEED TO VALIDATE THIS SHITZZLES
+
   try {
-    // Filters out requests with no filters. Returns all companies.
+    // Filters out requests with no filters. Returns all jobs.
     if (Object.keys(req.body).length === 0 && req.body.constructor === Object){
-      const companies = await job.findAll();
-      return res.json({ companies });
+      const jobs = await Job.findAll();
+      return res.json({ jobs });
     }
 
-    // Filters out requests with min employees greater than max employees
-    else if (req.body.minEmployees > req.body.maxEmployees) {
-      throw new ExpressError("minEmployees cannot exceed maxEmployees", 400)
-    }
-
-    // Passes data from req.body to job.filterGet, to create a response
+    // Passes data from req.body to Job.filterGet, to create a response
     else {
       const data = req.body
-      const response = await job.filterGet(data)
+      const response = await Job.filterGet(data)
 
       // Returns the response
       return res.json({ response });
@@ -86,9 +83,9 @@ router.get("/", async function (req, res, next) {
  * Authorization required: none
  */
 
-router.get("/:handle", async function (req, res, next) {
+router.get("/:id", async function (req, res, next) {
   try {
-    const job = await job.get(req.params.handle);
+    const job = await Job.get(req.params.id);
     return res.json({ job });
   } catch (err) {
     return next(err);
@@ -114,7 +111,7 @@ router.patch("/:handle", [ensureLoggedIn, ensureIsAdmin], async function (req, r
       throw new BadRequestError(errs);
     }
 
-    const job = await job.update(req.params.handle, req.body);
+    const job = await Job.update(req.params.handle, req.body);
     return res.json({ job });
   } catch (err) {
     return next(err);
@@ -128,7 +125,7 @@ router.patch("/:handle", [ensureLoggedIn, ensureIsAdmin], async function (req, r
 
 router.delete("/:handle", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next) {
   try {
-    await job.remove(req.params.handle);
+    await Job.remove(req.params.handle);
     return res.json({ deleted: req.params.handle });
   } catch (err) {
     return next(err);

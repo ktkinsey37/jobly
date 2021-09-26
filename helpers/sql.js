@@ -98,13 +98,13 @@ function sqlForFilterGetJobs(dataToFilterBy) {
         dataToFilterBy[key] = "%" + dataToFilterBy[key] + "%"
 
         // If the key is maxEmployees, write SQL query for that, push into sqlQuery array
-      } else if (key == "maxEmployees") {
-        sqlQuery.push(`num_employees < $${i}`)
+      } else if (key == "minSalary") {
+        sqlQuery.push(`salary > $${i}`)
         i++
 
         // If the key is minEmployees, write SQL query for that, push into sqlQuery array
-      } else if (key == "minEmployees") {
-        sqlQuery.push(`num_employees > $${i}`)
+      } else if (key == "hasEquity" && dataToFilterBy[key] == true) {
+        sqlQuery.push(`equity > $${i}`)
         i++
       } else {
         throw new ExpressError("Incorrect filter data provided", 400)
@@ -118,11 +118,17 @@ function sqlForFilterGetJobs(dataToFilterBy) {
 
   // Gets the values to be searched for from the data, filters them to lower case (for the name)
   let values = Object.values(dataToFilterBy)
-  values = values.map((x) => x.toLowerCase())
+  values = values.map((x) => x.toString().toLowerCase())
+
+  
+  if (values[values.length-1] == 'true'){
+    values.pop()
+    values.push(0)
+  }
   
 // Returns the SQL query and the values
  return { "sqlQuery":sqlQuery, "values":values }
 
 }
 
-module.exports = { sqlForPartialUpdate, sqlForFilterGetCompanies };
+module.exports = { sqlForPartialUpdate, sqlForFilterGetCompanies, sqlForFilterGetJobs };
