@@ -71,7 +71,8 @@ router.get("/", [ensureLoggedIn, ensureIsAdmin], async function (req, res, next)
 router.get("/:username", [ensureLoggedIn, ensureIsAdminOrUser], async function (req, res, next) {
   try {
     const user = await User.get(req.params.username);
-    return res.json({ user });
+    const jobs = await User.getApplications(user.username)
+    return res.json({ user, "jobs": jobs });
   } catch (err) {
     return next(err);
   }
@@ -117,6 +118,17 @@ router.delete("/:username", [ensureLoggedIn, ensureIsAdminOrUser], async functio
     return next(err);
   }
 });
+
+router.post("/:username/jobs/:id", [ensureLoggedIn, ensureIsAdminOrUser], async function (req, res, next) {
+  try{
+    const {username, id} = req.params
+    const jobId = await User.applyForJob(username, id)
+    console.log(jobId)
+    return res.json({"applied": jobId})
+  } catch (err) {
+    return next(err);
+  }
+})
 
 
 module.exports = router;

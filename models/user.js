@@ -89,8 +89,8 @@ class User {
           email,
           isAdmin,
         ],
-    );
-
+      );
+  
     const user = result.rows[0];
 
     return user;
@@ -188,6 +188,26 @@ class User {
 
     delete user.password;
     return user;
+  }
+
+  static async applyForJob(username, jobId){
+    let returnjobId = await db.query(
+              `INSERT INTO applications
+              (username,
+              job_id)
+              VALUES ($1, $2)
+              RETURNING job_id`,
+          [
+            username,
+            jobId
+          ],
+        );
+      return returnjobId.rows[0]
+  }
+
+  static async getApplications(username){
+    let applicationIds = await db.query('SELECT job_id FROM applications WHERE username = $1', [username])
+    return applicationIds.rows
   }
 
   /** Delete given user from database; returns undefined. */

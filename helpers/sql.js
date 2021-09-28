@@ -1,6 +1,6 @@
 const { BadRequestError, ExpressError } = require("../expressError");
 
-// This function takes in a partial amount of data in an object form for js
+// Takes in a partial amount of data in an object form for js
 // and returns it so that it's compatible with the current SQL database
 
 // Takes as args the input data to update, and the relationship between the SQL col name
@@ -106,6 +106,11 @@ function sqlForFilterGetJobs(dataToFilterBy) {
       } else if (key == "hasEquity" && dataToFilterBy[key] == true) {
         sqlQuery.push(`equity > $${i}`)
         i++
+
+      } else if (key == "hasEquity" && dataToFilterBy[key] == false) {
+        sqlQuery.push(`equity = $${i}`)
+        i++
+
       } else {
         throw new ExpressError("Incorrect filter data provided", 400)
       }
@@ -120,11 +125,13 @@ function sqlForFilterGetJobs(dataToFilterBy) {
   let values = Object.values(dataToFilterBy)
   values = values.map((x) => x.toString().toLowerCase())
 
-  
-  if (values[values.length-1] == 'true'){
+
+  if (values[values.length-1] == 'true' || 'false'){
     values.pop()
     values.push(0)
   }
+
+  console.log(sqlQuery, values, "SQLQUERY AND VALUESs")
   
 // Returns the SQL query and the values
  return { "sqlQuery":sqlQuery, "values":values }

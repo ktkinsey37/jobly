@@ -68,6 +68,12 @@ class Job {
     return job;
   }
 
+  static async getJobsForCompany(company_handle){
+    const jobRes = await db.query(`SELECT * FROM jobs WHERE company_handle = $1`, [company_handle])
+    const jobs = jobRes.rows
+    return jobs
+  }
+
   /** Update job data with `data`.
    *
    * This is a "partial update" --- it's fine if data doesn't contain all the

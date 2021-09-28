@@ -1,4 +1,4 @@
-const { sqlForPartialUpdate, sqlForFilterGetCompanies } = require("./sql");
+const { sqlForPartialUpdate, sqlForFilterGetCompanies, sqlForFilterGetJobs } = require("./sql");
 
 describe("sqlForPartialUpdate", function () {
   test("works", function () {
@@ -18,6 +18,15 @@ describe("sqlForPartialUpdate", function () {
       const testData = {name:"cat", maxEmployees:"1000", minEmployees: "0"}
   
       const res = sqlForFilterGetCompanies(testData)
+      expect(res).toEqual({"sqlQuery": "LOWER( name ) LIKE $1 AND num_employees < $2 AND num_employees > $3", "values": ["%cat%", "1000", "0"]})
+      });
+    });
+
+  describe("sqlForFilterGetJobs", function () {
+    test("works", function () {
+      const testData = {name:"soft", minSalary:"10000", hasEquity: true}
+  
+      const res = sqlForFilterGetJobs(testData)
       expect(res).toEqual({"sqlQuery": "LOWER( name ) LIKE $1 AND num_employees < $2 AND num_employees > $3", "values": ["%cat%", "1000", "0"]})
       });
     });

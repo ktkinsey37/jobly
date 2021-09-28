@@ -4,6 +4,7 @@
 
 const jsonschema = require("jsonschema");
 const express = require("express");
+const db = require("../db");
 
 const { BadRequestError, ExpressError } = require("../expressError");
 const { ensureLoggedIn, ensureIsAdmin } = require("../middleware/auth");
@@ -12,6 +13,7 @@ const Company = require("../models/company");
 const companyNewSchema = require("../schemas/companyNew.json");
 const companyUpdateSchema = require("../schemas/companyUpdate.json");
 const companyGetSchema = require("../schemas/companyGet.json");
+const Job = require("../models/job");
 
 const router = new express.Router();
 
@@ -96,7 +98,9 @@ router.get("/", async function (req, res, next) {
 router.get("/:handle", async function (req, res, next) {
   try {
     const company = await Company.get(req.params.handle);
-    return res.json({ company });
+    const jobs = await Job.getJobsForCompany(req.params.handle)
+    const returnObj = {company, "jobs": jobs}
+    return res.json({ returnObj });
   } catch (err) {
     return next(err);
   }
